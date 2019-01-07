@@ -73,4 +73,4 @@ runcmd:
   - service walinuxagent restart # enable swap using waagent.conf
   - usermod -G docker ${admin_username}
   - systemctl enable docker
-  - docker run -h `hostname` -p 80:8000 -d rcarmo/demo-frontend-stateless
+  - docker run --restart always -h `hostname` -p 80:8000 -d rcarmo/demo-frontend-stateless 

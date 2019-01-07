@@ -220,21 +220,21 @@ resource "azurerm_lb" "ha" {
  frontend_ip_configuration {
     name                          = "ha"
     subnet_id                     = "${azurerm_subnet.default.id}" # the endpoint is on the client subnet
-    private_ip_address_allocation = "dynamic" # we are not going to define a fixed IP address because 
+    private_ip_address_allocation = "static"
   }
 }
 
 ## TODO: document the options here
 
 resource "azurerm_lb_rule" "ha" {
-  name                = "${local.layer_name}-ha-rule"
   resource_group_name = "${azurerm_resource_group.rg.name}"
+  loadbalancer_id     = "${azurerm_lb.ha.id}"
+  name                = "${local.layer_name}-ha-rule"
   protocol            = "All"
   frontend_port       = 0
   backend_port        = 0
   frontend_ip_configuration_name = "ha"
-  loadbalancer_id = "${azurerm_lb.ha.id}"
-
+  probe_id            = "${azurerm_lb_probe.ha.id}"
 }
 
 resource "azurerm_lb_backend_address_pool" "ha" {
