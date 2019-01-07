@@ -22,7 +22,7 @@ variable "shared_prefix" {
 }
 
 variable "solution_name" {
-  default = "ha"
+  default = "acme-backend-ha"
 }
 
 variable "ssh_port" {
@@ -42,15 +42,17 @@ variable "storage_type" {
 }
 
 locals {
-  resource_group_name = "${var.shared_prefix}-ilb"
+  resource_group_name = "${var.solution_name}-ilb"
+  layer_name          = "backend"
 
   tags = {
-    environment = "production"
+    environment = "testing"
+    layer_name  = "${local.layer_name}"
     solution    = "${var.instance_prefix}"
   }
 
-  vnet_name             = "${var.shared_prefix}"
-  vnet_address_space    = "10.0.0.0/16"
+  vnet_name                    = "${var.shared_prefix}"
+  vnet_address_space           = "10.0.0.0/16"
   client_subnet_name           = "default"
   client_subnet_address_prefix = "10.0.0.0/24"
   server_subnet_name           = "servers"
@@ -124,7 +126,7 @@ data "template_file" "client_config" {
 module "client" {
   source = "./linux"
 
-  name                = "${var.instance_prefix}-client"
+  name                = "client"
   vm_size             = "${var.standard_vm_size}"
   location            = "${var.location}"
   resource_group_name = "${azurerm_resource_group.rg.name}"
@@ -146,7 +148,7 @@ module "client" {
 #--- Servers ---
 
 resource "azurerm_availability_set" "servers" {
-  name                = "${var.shared_prefix}-${var.solution_name}"
+  name                = "${var.shared_prefix}-${local.layer_name}-avset"
   location            = "${azurerm_resource_group.rg.location}"
   resource_group_name = "${azurerm_resource_group.rg.name}"
   managed             = true
@@ -161,10 +163,10 @@ data "template_file" "server_config" {
     admin_username = "${var.admin_username}"
   }
 }
-module "ha-server1" {
+module "backend1" {
   source = "./linux"
 
-  name                = "${var.instance_prefix}-server1"
+  name                = "${var.instance_prefix}-backend1"
   vm_size             = "${var.standard_vm_size}"
   location            = "${var.location}"
   resource_group_name = "${azurerm_resource_group.rg.name}"
@@ -184,10 +186,10 @@ module "ha-server1" {
 }
 
 
-module "ha-server2" {
+module "backend2" {
   source = "./linux"
 
-  name                = "${var.instance_prefix}-server2"
+  name                = "${var.instance_prefix}-backend2"
   vm_size             = "${var.standard_vm_size}"
   location            = "${var.location}"
   resource_group_name = "${azurerm_resource_group.rg.name}"
@@ -210,7 +212,7 @@ module "ha-server2" {
 ###--- Load Balancer ---
 
 resource "azurerm_lb" "ha" {
-  name                = "${var.solution_name}-lb"
+  name                = "${local.layer_name}-lb"
   location            = "${var.location}"
   resource_group_name = "${azurerm_resource_group.rg.name}"
   sku                 = "Standard"
@@ -222,10 +224,10 @@ resource "azurerm_lb" "ha" {
   }
 }
 
-## TODO: rule
+## TODO: document the options here
 
 resource "azurerm_lb_rule" "ha" {
-  name                = "${var.solution_name}-ha"
+  name                = "${local.layer_name}-ha-rule"
   resource_group_name = "${azurerm_resource_group.rg.name}"
   protocol            = "All"
   frontend_port       = 0
@@ -242,13 +244,13 @@ resource "azurerm_lb_backend_address_pool" "ha" {
 }
 
 resource "azurerm_network_interface_backend_address_pool_association" "server1" {
-  network_interface_id    = "${module.ha-server1.virtual_machine_nic}"
-  ip_configuration_name   = "${module.ha-server1.virtual_machine_ip_configuration}"
+  network_interface_id    = "${module.backend1.virtual_machine_nic}"
+  ip_configuration_name   = "${module.backend1.virtual_machine_ip_configuration}"
   backend_address_pool_id = "${azurerm_lb_backend_address_pool.ha.id}"
 }
 
 resource "azurerm_network_interface_backend_address_pool_association" "server2" {
-  network_interface_id    = "${module.ha-server2.virtual_machine_nic}"
-  ip_configuration_name   = "${module.ha-server2.virtual_machine_ip_configuration}"
+  network_interface_id    = "${module.backend2.virtual_machine_nic}"
+  ip_configuration_name   = "${module.backend2.virtual_machine_ip_configuration}"
   backend_address_pool_id = "${azurerm_lb_backend_address_pool.ha.id}"
 }
