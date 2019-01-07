@@ -11,7 +11,7 @@ export TF_VAR_standard_vm_size := "Standard_B2ms"
 .PHONY: init plan apply destroy validate
 
 clean:
-    -rm -rf .terraform
+	-rm -rf .terraform
 	rm terraform.tfstate terraform.tfstate.backup 
 
 init plan apply destroy validate:
