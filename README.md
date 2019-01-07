@@ -4,10 +4,28 @@ This is a demo plan to deploy a high-availability scenario using an Azure Standa
 
 The full scenario has:
 
-- two (nominally identical) back-end servers on the same VNET and subnet
-- an Azure Standard Load Balancer configured as an internal load balancer, also mapped to that VNET
+- two (nominally identical) back-end servers on the same VNET and subnet, running a small HTTP server that returns their hostname when you issue a request for `/hostname`
+- an Azure Standard Load Balancer configured as an internal load balancer, also mapped to that VNET, with an HA rule for those servers and an HTTP probe defined to ascertain service health
 - a test client machine (also on the same VNET, but another subnet) to issue requests to the load balancer
-- an HTTP probe defined to ascertain service health
+
+## Usage
+
+* Apply this plan and SSH into the client machine (the `Makefile` automatically adds your SSH key to all the servers if you're using Linux or Mac). 
+* Make a note of the load balancer's IP address (typically 10.0.0.4) and run `watch curl -s http://10.0.0.4/hostname`
+
+You should see something like this:
+
+```
+Every 2.0s: curl -s http://10.0.0.4/hostname                             client: Mon Jan  7 15:31:53 2019
+
+sv-backend1
+```
+
+That means the load balancer considers the first backend as being the primary destination for traffic.
+
+* Go to the portal and kill backend 1. The `curl` output should change to backend 2
+* Restart backend 1. Wait a few seconds for health probes to recognize it's active, but there should be no change in `curl` output
+* Kill backend 2. Traffic should move to backend 1 again
 
 ## Notes:
 
