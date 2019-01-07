@@ -48,10 +48,10 @@ locals {
   tags = {
     environment = "testing"
     layer_name  = "${local.layer_name}"
-    solution    = "${var.instance_prefix}"
+    solution    = "${var.solution_name}"
   }
 
-  vnet_name                    = "${var.shared_prefix}"
+  vnet_name                    = "${var.solution_name}"
   vnet_address_space           = "10.0.0.0/16"
   client_subnet_name           = "default"
   client_subnet_address_prefix = "10.0.0.0/24"
