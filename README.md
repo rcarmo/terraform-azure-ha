@@ -10,7 +10,8 @@ The full scenario has:
 
 ## Usage
 
-* Apply this plan and SSH into the client machine (the `Makefile` automatically adds your SSH key to all the servers if you're using Linux or Mac). 
+* Boostrap your environment by cloning this repository and doing `make init`.
+* Apply this plan using `make apply` and SSH into the client machine (the `Makefile` automatically adds your SSH key to all the servers if you're using Linux or Mac). 
 * Make a note of the load balancer's IP address (typically 10.0.0.4) and run `watch curl -s http://10.0.0.4/hostname`
 
 You should see something like this:
