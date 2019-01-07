@@ -7,7 +7,7 @@ The full scenario has:
 - two (nominally identical) back-end servers on the same VNET and subnet
 - an Azure Standard Load Balancer configured as an internal load balancer, also mapped to that VNET
 - a test client machine (also on the same VNET, but another subnet) to issue requests to the load balancer
-
+- an HTTP probe defined to ascertain service health
 
 ## Notes:
 

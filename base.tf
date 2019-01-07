@@ -254,3 +254,14 @@ resource "azurerm_network_interface_backend_address_pool_association" "server2" 
   ip_configuration_name   = "${module.backend2.virtual_machine_ip_configuration}"
   backend_address_pool_id = "${azurerm_lb_backend_address_pool.ha.id}"
 }
+
+resource "azurerm_lb_probe" "ha" {
+  resource_group_name = "${azurerm_resource_group.rg.name}"
+  loadbalancer_id     = "${azurerm_lb.ha.id}"
+  name                = "http-running-probe"
+  port                = 80
+  protocol            = "http"
+  request_path        = "/hostname"
+  interval_in_seconds = 5
+  number_of_probes    = 2 # number_of_probes * interval_in_seconds >= 10
+}
